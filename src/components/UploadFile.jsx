@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import logo from "../assets/logo.png";
@@ -8,7 +8,28 @@ const UploadFile = () => {
     const [dragActive, setDragActive] = useState(false);
     const [file, setFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    
+    const [uploadTime, setUploadTime] = useState(null);
+    const [driverTime, setDriverTime] = useState(null);
+    const [progress, setProgress] = useState(0);
+    const VITE_UPLOAD_URL = 'http://13.202.126.119:8001/'
+
+    useEffect(() => {
+        let interval;
+        if (isLoading) {
+            // Simulate progress over 5 minutes (300 seconds)
+            interval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev < 95) { // Only progress to 95% automatically
+                        return prev + (100 / (300 / 0.5)); // Update every 500ms
+                    }
+                    return prev;
+                });
+            }, 500);
+        } else {
+            setProgress(0);
+        }
+        return () => clearInterval(interval);
+    }, [isLoading]);
 
     const handleDrag = (e) => {
         e.preventDefault();
@@ -46,11 +67,6 @@ const UploadFile = () => {
             return;
         }
 
-        // if (uploadedFile.type !== 'application/pdf') {
-        //     toast.error('Only PDF files are allowed');
-        //     return;
-        // }
-
         setFile(uploadedFile);
     };
 
@@ -61,15 +77,21 @@ const UploadFile = () => {
     const uploadPDF = async (file) => {
         const formData = new FormData();
         formData.append("file", file);
-        // console.log(formData);
         
-        return axios.post(`${import.meta.env.VITE_UPLOAD_URL}/upload/`, formData, {
+        const startTime = Date.now();
+        const response = await axios.post(`${VITE_UPLOAD_URL}/upload/`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
+        setUploadTime(((Date.now() - startTime) / 1000).toFixed(1));
+        return response;
     };
 
     const runDriver = async () => {
-        return axios.post(`${import.meta.env.VITE_UPLOAD_URL}/run-driver/`);
+        const startTime = Date.now();
+        const response = await axios.post(`${VITE_UPLOAD_URL}/run-driver/`);
+        setDriverTime(((Date.now() - startTime) / 1000).toFixed(1));
+        setProgress(100); // Complete the progress bar
+        return response;
     };
 
     const handleClick = async () => {
@@ -80,18 +102,18 @@ const UploadFile = () => {
 
         try {
             setIsLoading(true);
+            setUploadTime(null);
+            setDriverTime(null);
+            setProgress(0);
             
-            // Upload the PDF file
             const uploadResponse = await uploadPDF(file);
             if (uploadResponse.status === 200) {
-                // If upload is successful, run the driver
                 const driverResponse = await runDriver();
                 if (driverResponse.status === 200) {
                     toast.success('Document uploaded and processed successfully!', {
                         icon: "🎉"
                     });
                     console.log(driverResponse);
-                    
                     setFile(null);
                 }
             }
@@ -104,7 +126,7 @@ const UploadFile = () => {
 
     return (
         <div className='flex items-center justify-center h-screen w-screen bg-custom'>
-            <div className="w-full rounded-xl max-w-2xl mx-auto p-10 bg-[#ebeffe] shadow relative before:absolute before:-top-10 before:-left-0 before:w-1/2 before:h-1/2 before:bg-no-repeat before:bg-center before:bg-cover before:content-[''] before:bg-[url('https://www.techgropse.com/common/images/common_icons/animate.svg')]  overflow-hidden">
+            <div className="w-full rounded-xl max-w-2xl mx-auto p-10 bg-[#ebeffe] shadow relative before:absolute before:-top-10 before:-left-0 before:w-1/2 before:h-1/2 before:bg-no-repeat before:bg-center before:bg-cover before:content-[''] before:bg-[url('https://www.techgropse.com/common/images/common_icons/animate.svg')] overflow-hidden">
                 <div className="text-center flex justify-center items-center w-full flex-col gap-4">
                     <img src={logo} className='' alt="logo" />
                     <h2 className="text-[22px] font-semibold mb-2 text-gray-500 pb-4">Upload PDF File</h2>
@@ -112,8 +134,22 @@ const UploadFile = () => {
 
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center p-12">
-                        <div className="loader"></div>
-                        <p className="mt-4 text-lg text-gray-600">Uploading your document...</p>
+                        <div className="w-full max-w-md">
+                            {/* Progress bar container */}
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                {/* Animated progress bar */}
+                                <div 
+                                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                                    style={{ width: `${progress}%` }}
+                                ></div>
+                            </div>
+                            {/* Progress percentage */}
+                            <div className="text-center mt-2 text-sm text-gray-600">
+                                {progress.toFixed(0)}%
+                            </div>
+                        </div>
+                        <p className="mt-4 text-lg text-gray-600">Processing your document...</p>
+                        <p className="mt-2 text-sm text-gray-500">Estimated time: 4-5 minutes</p>
                     </div>
                 ) : (
                     <>
@@ -157,7 +193,7 @@ const UploadFile = () => {
 
                         <div className="flex items-end justify-end mt-6">
                             <button
-                                className={`py-2 rounded bg-[#1A81FF] text-white px-10 ${!file ? 'cursor-not-allowed' : ''}`}
+                                className={`py-2 rounded bg-[#1A81FF] text-white px-10 ${!file ? 'cursor-not-allowed opacity-50' : ''}`}
                                 disabled={!file || isLoading}
                                 onClick={handleClick}
                             >

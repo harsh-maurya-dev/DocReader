@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+* {
+  font-family: "Montserrat", serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.bg-custom {
+  background: rgb(29, 118, 188);
+  background: linear-gradient(
+    145deg,
+    rgba(29, 118, 188, 1) 35%,
+    rgba(73, 170, 209, 1) 100%
+  );
+}
+
+.loader {
+  width: 60px;
+  aspect-ratio: 1;
+  border: 15px solid #ddd;
+  border-radius: 50%;
+  position: relative;
+  transform: rotate(45deg);
+}
+.loader::before {
+  content: "";
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  border: 15px solid #1A81FF;
+  animation: l18 2s infinite linear;
+}
+@keyframes l18 {
+    0%   {clip-path:polygon(50% 50%,0 0,0    0,0    0   ,0    0   ,0    0   )}
+    25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0   ,100% 0   ,100% 0   )}
+    50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+    75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0    100%,0    100%)}
+    100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0    100%,0    0   )}
+}
+
+
+/* .loader {
+  width: fit-content;
+  font-weight: bold;
+  color: #212121;
+  font-size: 30px;
+  padding-bottom: 8px;
+  background: linear-gradient(currentColor 0 0) 0 100%/0% 3px no-repeat;
+  animation: l2 2s linear infinite;
+}
+.loader:before {
+  content:"Loading..."
+}
+@keyframes l2 {to{background-size: 100% 3px}} */

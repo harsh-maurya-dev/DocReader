@@ -9,7 +9,7 @@ const ImageUploader = () => {
   const [loading, setLoading] = useState(false);
   const personImageInputRef = useRef(null);
   const garmentImageInputRef = useRef(null);
-  const [garmentType, setGarmentType] = useState('Upper');
+  const [garmentType, setGarmentType] = useState('upper_body');
   const [selectedModel, setSelectedModel] = useState('viton_hd'); // Default to model1
 
   // Example Garments types array

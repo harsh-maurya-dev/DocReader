@@ -1,13 +1,11 @@
-import { ToastContainer } from 'react-toastify'
-import UploadFile from './components/UploadFile'
 import './index.css'
+import ImageUploader from './components/ImageUploader'
 
 function App() {
 
   return (
     <>
-    <ToastContainer autoClose={1000}/>
-    <UploadFile/>
+      <ImageUploader />
     </>
   )
 }

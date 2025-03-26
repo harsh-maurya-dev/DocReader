@@ -10,17 +10,22 @@ const ImageUploader = () => {
   const personImageInputRef = useRef(null);
   const garmentImageInputRef = useRef(null);
   const [garmentType, setGarmentType] = useState('Upper');
+  const [selectedModel, setSelectedModel] = useState('viton_hd'); // Default to model1
 
   // Example Garments types array
   const garmentTypes = [
-    { value: 'Upper', label: 'Upper Body' },
-    { value: 'Lower', label: 'Lower Body' },
-    { value: 'Full', label: 'Full Body' }
+    { value: 'upper_body', label: 'Upper Body' },
+    { value: 'lower_body', label: 'Lower Body' },
+    { value: 'dresses', label: 'Full Body' }
   ];
 
+  // AI Models available
+  const aiModels = [
+    { id: 'viton_hd', name: 'Model 1' },
+    { id: 'dress_code', name: 'Model 2' }
+  ];
 
   // Example images arrays
-
   const personExamples = [
     '/assets/images/img1.jpg',
     '/assets/images/img2.jpg',
@@ -38,7 +43,6 @@ const ImageUploader = () => {
   ];
 
   // Upload Image function
-
   const handleFileUpload = (setter) => (event) => {
     const file = event.target.files[0];
     if (file && file.type.match('image.*')) {
@@ -51,7 +55,6 @@ const ImageUploader = () => {
   };
 
   // Drag and Drop function
-
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -71,7 +74,6 @@ const ImageUploader = () => {
   };
 
   // Download function
-
   const handleDownload = () => {
     if (!generatedImage) return;
 
@@ -95,7 +97,7 @@ const ImageUploader = () => {
   }) => (
     <div className="space-y-2">
       <div
-        className="relative border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center h-72  w-full hover:border-blue-500 transition-colors"
+        className="relative border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center h-72 w-full hover:border-blue-500 transition-colors"
         onDragOver={handleDragOver}
         onDrop={onDrop}
       >
@@ -169,23 +171,20 @@ const ImageUploader = () => {
       return;
     }
 
-    console.log("Generating image with:", { personImage, garmentImage });
-
     try {
       setLoading(true);
-      setGeneratedImage(null); // Clear previous result
+      setGeneratedImage(null);
 
       const url = `${import.meta.env.VITE_API_URL}/model/generate`;
-      // Create FormData for multipart upload
       const formData = new FormData();
 
-      // Convert data URLs to Blobs if needed
       const personBlob = await fetch(personImage).then(r => r.blob());
       const garmentBlob = await fetch(garmentImage).then(r => r.blob());
 
       formData.append("model_image", personBlob, "person.jpg");
       formData.append("garment_image", garmentBlob, "garment.jpg");
       formData.append("clothes_type", garmentType);
+      formData.append("model_type", selectedModel);
 
       const response = await axios.post(url, formData, {
         headers: {
@@ -194,7 +193,6 @@ const ImageUploader = () => {
         },
       });
 
-      // Check if the response contains the generated image
       if (response.data.error === false) {
         setGeneratedImage(response.data.results.result?.url);
       } else {
@@ -263,10 +261,37 @@ const ImageUploader = () => {
                 and click Generate
               </p>
             )}
-
           </div>
-          {/* Garment Type Dropdown and Generate Button */}
+          
+          {/* Model Selection, Garment Type and Buttons */}
           <div className="mt-4 space-y-4">
+            {/* AI Model Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select AI Model
+              </label>
+              <div className="flex space-x-4">
+                {aiModels.map((model) => (
+                  <div key={model.id} className="flex items-center">
+                    <input
+                      type="radio"
+                      id={model.id}
+                      name="aiModel"
+                      value={model.id}
+                      checked={selectedModel === model.id}
+                      onChange={() => setSelectedModel(model.id)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      disabled={loading}
+                    />
+                    <label htmlFor={model.id} className="ml-2 block text-sm text-gray-700">
+                      {model.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Garment Type Dropdown */}
             <div>
               <label htmlFor="garment-type" className="block text-sm font-medium text-gray-700 mb-1">
                 Garment Type
@@ -276,6 +301,7 @@ const ImageUploader = () => {
                 value={garmentType}
                 onChange={(e) => setGarmentType(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                disabled={loading}
               >
                 {garmentTypes.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -285,6 +311,7 @@ const ImageUploader = () => {
               </select>
             </div>
 
+            {/* Action Buttons */}
             <div className="w-full">
               <button
                 className="bg-blue-500 w-full text-white my-1 px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
@@ -301,13 +328,10 @@ const ImageUploader = () => {
                 <Download className="w-5 h-5" />
                 <p className='text-center'>Download Image</p>
               </button>
-
             </div>
           </div>
         </div>
-
       </div>
-
     </div>
   );
 };
